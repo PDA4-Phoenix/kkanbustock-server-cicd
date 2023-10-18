@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app # deployment의 이름
+  namespace: team-4 # 쿠버네티스에서 deployment를 배포할 이름
+spec: # deployment의 스펙
+  replicas: 1 # replicas 개수 -> pod 한개 띄운다는 뜻 왜 하나? 클라이언트는 하나 pod가 두개면 웹뷰가 두개라서 어떤걸 띄워야할지 모른다. 그래서 보통 하나만 띄운다.
+  selector:
+    matchLabels: # 매치할 라벨 template:metadata:labels에 있는 탬플릿 ( 레플레카셋과 파드를 연결하는것)
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app # 파드에 대한 얘기, 파드가 여러개니까
+    spec:
+      affinity: #***** 중요#
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution: # 이건 엄격하게 지킨다는거
+            nodeSelectorTerms: #노드를 선택하는것
+              - matchExpressions:
+                  - key: alpha.eksctl.io/nodegroup-name
+                    operator: In
+                    values:
+                      - ng-4 # 내 조에 맞는 노드그룹 이름
+      containers: # pod 안에는 컨테이너 exs에 배포할 컨테이너에 대한 정보를 작성
+        - name: app
+          image: 686710509719.dkr.ecr.ap-northeast-2.amazonaws.com/team-4:client-app-20231018134053
+          imagePullPolicy: IfNotPresent
+          resources: # 필요한 리소스 직접 정의해라 . 우리가 갖고이쓴ㄴ 노드 정보보고 필요한 리소스 정의해라
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+          ports:
+            - containerPort: 8080 # 컨테이너가 사용하는 포트가 뭔지 작성
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service # 서비스를 설명하는 데이터
+  namespace: team-4
+spec: # 서비스의 스팩
+  type: NodePort # 디폴트는 클러스터 IP
+  selector: # 클라이언트 서비스랑 컨테이너랑 연결
+    app: app # 특정 파드의 라벨 연결하는것이다.
+  ports: # 서비스의 포트
+  - name: http
+    protocol: TCP
+    port: 8080 # 서비스의 포트( 우리가 서비스를 통해서 접근하기에 서비스의 포트) eks 들어가면 보안그룹
+    targetPort: 8080 # 컨테이너가 사용하는 포트와 연결
