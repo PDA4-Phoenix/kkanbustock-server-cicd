@@ -4,7 +4,7 @@ images:
 - name: /
   newName: /
 - name: 686710509719.dkr.ecr.ap-northeast-2.amazonaws.com/team-4
-  newTag: back-e7b176f75bde1a4a0710e5e3b43636bceed550a1
+  newTag: back-c12c5e5a9ef6926312f73535ed0b7ec928bfd538
 - name: app
   newTag: main-3abede514e69bf831c9b14e42ca62ff7f179687a
 - name: team-4
